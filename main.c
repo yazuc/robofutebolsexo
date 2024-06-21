@@ -11,8 +11,7 @@ void moveRobo(cpBody* body, void* data);
 void moveRoboGoleiro(cpBody* body, void* data);
 void moveRoboZagueiro(cpBody* body, void* data);
 void moveBola(cpBody* body, void* data);
-bool isBallinGoleira1(cpVect vect);
-bool isBallinGoleira2(cpVect vect);
+bool isBallinGoleira1();
 void resetaBall(cpBody* vect);
 
 // Prototipos
@@ -94,21 +93,21 @@ void initCM()
     //caso bola dentro da área de x <= 980 e y1 <= 380 e y2 >= 325 gol time 1
     // x em 44 e pos y1 = 380, y2=325 score1
 
-    //ballBody = newCircle(cpv(512,350), 8, 1, "small_football.png", moveBola, 0.2, 2);
+    ballBody = newCircle(cpv(880,350), 8, 1, "small_football.png", moveBola, 0.2, 2);
 
     // ... e um robô de exemplo
     //robotBody = newCircle(cpv(120,350), 20, 5, "ship1.png", NULL, 0.2, 0.5);
     
 
     //shulk será dois zagueiro
-    //Shulk = newCircle(cpv(200,450), 20, 5, "shulk_icon.png", moveRoboZagueiro, 0.2, 0.5);
+    Shulk = newCircle(cpv(200,450), 20, 5, "shulk_icon.png", moveRoboZagueiro, 0.2, 0.5);
     //robotBody = newCircle(cpv(200,300), 20, 5, "shulk_icon.png", moveRoboZagueiro, 0.2, 0.5);
     
     //rex será dois atacantes atacante
-    //Rex = newCircle(cpv(800,350), 20, 5, "rex_icon.png", moveRobo, 0.2, 0.5);
+    Rex = newCircle(cpv(800,350), 20, 5, "rex_icon.png", moveRobo, 0.2, 0.5);
     
     //A será a goleira
-    A = newCircle(cpv(90,350), 20, 5, "A_icon.png", NULL, 0.2, 0.5);
+    //A = newCircle(cpv(90,350), 20, 5, "A_icon.png", NULL, 0.2, 0.5);
 }
 
 // Exemplo de função de movimentação: move o robô em direção à bola
@@ -118,10 +117,10 @@ void moveRobo(cpBody* body, void* data)
     const float limiteProprioGolX = 100.0;
 
     // Limite da velocidade do robô
-    const float limiteVelocidade = 10.0;
+    const float limiteVelocidade = 20.0;
 
     // Limite do impulso
-    const float limiteImpulso = 20.0;
+    const float limiteImpulso = 10.0;
 
     // Obtém e limita a velocidade do robô
     cpVect vel = cpBodyGetVelocity(body);
@@ -158,7 +157,7 @@ void moveRoboZagueiro(cpBody* body, void* data) {
     const float limiteYBaixo = 525;
     const float limiteYCima = 262;
     const float centroCampoY = 350;
-    const float maxVelocidade = 10.0;
+    const float maxVelocidade = 5.0;
     const float maxImpulso = 10.0;
 
     // Posição original do zagueiro
@@ -177,7 +176,7 @@ void moveRoboZagueiro(cpBody* body, void* data) {
     cpVect delta = cpvzero;
 
     // Condição para mover apenas quando estiver próximo da bola
-    if (fabs(ballPos.x - robotPos.x) < 200) {
+    if (cpvdist(robotPos, ballPos) < 200.0) {
         // Ajusta a posição em y do robô para seguir a bola dentro dos limites
         if (robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {
             delta.y = ballPos.y - robotPos.y;
@@ -262,74 +261,63 @@ void moveRoboGoleiro(cpBody* body, void* data)
 // Exemplo: move a bola para o meio de campo caso ela se encontre parada por determinada quantidade de tempo
 void moveBola(cpBody* body, void* data)
 {
-    //cpv(512,350) meio do campo
-    
-    cpVect ballPos  = cpBodyGetPosition(ballBody);
-    
-    if(isBallinGoleira1(ballPos)){
+    //cpv(512,350) meio do campo    
+    if(isBallinGoleira1()){
         resetaBall(body);
-    }
-    // if(isBallinGoleira2(ballPos)){
-    //     resetaBall(body);
-    //     score2++;
-    // }
+    }   
 
 }
 
 void resetaBall(cpBody* body){
-    cpVect ballPos  = cpBodyGetPosition(ballBody);
-
+    // Posição desejada para o centro do campo
     cpVect meioCampo = cpv(512, 350);
-    cpVect impulso = cpv(meioCampo.x - ballPos.x, meioCampo.y - ballPos.y);    
 
-    // E aplica na bola
-    cpBodyApplyImpulseAtWorldPoint(body, impulso, cpBodyGetPosition(body));
+    cpVect RexPos = cpv(800,350);
+    cpVect ShulkPos = cpv(200,450);
+
+    // Define a posição da bola diretamente para o meio do campo
+    cpBodySetPosition(body, meioCampo);
+    cpBodySetPosition(Rex, RexPos);
+    cpBodySetPosition(Shulk, ShulkPos);
 }
 
-bool isBallinGoleira1(cpVect ballPos) {
-    //caso bola dentro da área de x <= 44 e y1 <= 380 e y2 >= 325 gol time 2
-    // x em 980 e pos y1 = 380, y2=325 score2 
-    
-    // Coordenadas da goleira esquerda
+bool isBallinGoleira1() {
+    // Coordenadas das goleiras e traves
     cpVect goleiraEsquerda = cpv(44, 350);
-    cpVect traveCima = cpv(44, 380);
-    cpVect traveBaixo = cpv(44, 325);
+    cpVect goleiraDireita = cpv(980, 350);
+    
+    float traveCimaY = 380.0;
+    float traveBaixoY = 325.0;
+    cpVect ballPos = cpBodyGetPosition(ballBody);
 
-    //printf("ballPos x: %d  ballPos y: %d %d");
+    // Debugging
+    printf("ballPos.x : %f \n", ballPos.x);
+    printf("ballPos.y %f \n", ballPos.y);
+    printf("goleiraDireita.x : %f \n", goleiraDireita.x);
+    printf("traveCima.y : %f \n", traveCimaY);
+    printf("traveBaixo.y : %f \n", traveBaixoY);
 
-    // Verifica se a bola está dentro da área da goleira
+    // Verifica se a bola está dentro da área da goleira esquerda
     if (ballPos.x <= goleiraEsquerda.x && 
-        ballPos.y <= traveCima.y && 
-        ballPos.y >= traveBaixo.y) {
-            score1++;
-            restartCM();
+        ballPos.y <= traveCimaY && 
+        ballPos.y >= traveBaixoY) {
+        score2++;
         return true;
-    } else {
-        return false;
     }
+
+    // Verifica se a bola está dentro da área da goleira direita
+    if (ballPos.x >= goleiraDireita.x && 
+        ballPos.y <= traveCimaY && 
+        ballPos.y >= traveBaixoY) {
+        score1++;
+        return true;
+    }
+
+    return false;
 }
 
-bool isBallinGoleira2(cpVect ballPos) {
-    //caso bola dentro da área de x <= 980 e y1 <= 380 e y2 >= 325 gol time 1
-    // x em 44 e pos y1 = 380, y2=325 score1
 
-    // Coordenadas da goleira esquerda
-    cpVect goleiraEsquerda = cpv(980, 350);
-    cpVect traveCima = cpv(980, 380);
-    cpVect traveBaixo = cpv(980, 325);
 
-    //printf("ballPos x: %d  ballPos y: %d %d");
-
-    // Verifica se a bola está dentro da área da goleira
-
-    if (fabs(ballPos.x) <= fabs(goleiraEsquerda.x) && 
-        fabs(ballPos.y) <= fabs(traveCima.y) && 
-        fabs(ballPos.y) >= fabs(traveBaixo.y)) {
-        return true;
-    } else {
-        return false;
-    }
-}
 
 // Libera memória ocupada por cada corpo, forma e ambiente
 // Acrescente mais linhas caso necessário
@@ -380,13 +368,13 @@ void restartCM()
     // Escreva o código para reposicionar os jogadores, ressetar o score, etc
     // Remove todas as shapes associadas ao corpo
 
-    if (Shulk) {
-        printf("Tentou destruir o Shulk\n");
+    // if (Shulk) {
+    //     printf("Tentou destruir o Shulk\n");
 
-        cpSpaceAddPostStepCallback(space, destroyShulk, Rex, NULL);
-        cpSpaceAddPostStepCallback(space, destroyShulk, Shulk, NULL);
-        cpSpaceAddPostStepCallback(space, destroyShulk, ballBody, NULL);
-    }
+    //     cpSpaceAddPostStepCallback(space, destroyShulk, Rex, NULL);
+    //     cpSpaceAddPostStepCallback(space, destroyShulk, Shulk, NULL);
+    //     cpSpaceAddPostStepCallback(space, destroyShulk, ballBody, NULL);
+    // }
 
     
     // Não esqueça de ressetar a variável gameOver!
