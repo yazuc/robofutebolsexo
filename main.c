@@ -12,7 +12,8 @@ void moveRoboGoleiro(cpBody* body, void* data);
 void moveRoboZagueiro(cpBody* body, void* data);
 void moveBola(cpBody* body, void* data);
 bool isBallinGoleira1();
-void resetaBall(cpBody* vect);
+bool isBallOutOfBounds();
+void resetaBall(cpBody* vect, float x, float y);
 
 // Prototipos
 void initCM();
@@ -93,21 +94,21 @@ void initCM()
     //caso bola dentro da área de x <= 980 e y1 <= 380 e y2 >= 325 gol time 1
     // x em 44 e pos y1 = 380, y2=325 score1
 
-    ballBody = newCircle(cpv(880,350), 8, 1, "small_football.png", moveBola, 0.2, 2);
+    ballBody = newCircle(cpv(512,350), 8, 2, "small_football.png", moveBola, 0.2, 2);
 
     // ... e um robô de exemplo
     //robotBody = newCircle(cpv(120,350), 20, 5, "ship1.png", NULL, 0.2, 0.5);
     
 
     //shulk será dois zagueiro
-    Shulk = newCircle(cpv(200,450), 20, 5, "shulk_icon.png", moveRoboZagueiro, 0.2, 0.5);
+    //Shulk = newCircle(cpv(200,450), 20, 5, "shulk_icon.png", moveRoboZagueiro, 0.2, 0.5);
     //robotBody = newCircle(cpv(200,300), 20, 5, "shulk_icon.png", moveRoboZagueiro, 0.2, 0.5);
     
     //rex será dois atacantes atacante
     Rex = newCircle(cpv(800,350), 20, 5, "rex_icon.png", moveRobo, 0.2, 0.5);
     
     //A será a goleira
-    //A = newCircle(cpv(90,350), 20, 5, "A_icon.png", NULL, 0.2, 0.5);
+    A = newCircle(cpv(90,350), 20, 5, "A_icon.png", moveRoboGoleiro, 0.2, 0.5);
 }
 
 // Exemplo de função de movimentação: move o robô em direção à bola
@@ -230,6 +231,8 @@ void moveRoboGoleiro(cpBody* body, void* data)
     //Condição para realmente só mexer quando estiver próximo
 
     printf("distância do robo em relacao a bola: %f \n", cpvdist(robotPos, ballPos));
+
+
     if(cpvdist(robotPos, ballPos) < 200.0){
         printf("entrou");
         // Ajusta a posição em y do robô para seguir a bola dentro dos limites
@@ -237,15 +240,10 @@ void moveRoboGoleiro(cpBody* body, void* data)
             delta.y = ballPos.y - robotPos.y;
         }
 
-
         // Mantenha o robô na linha do gol (x = 90)
         if (robotPos.x > 90) {
             delta.x = 90;
-        }
-        
-        if(cpvdist(robotPos, ballPos) < 27.96){
-            delta.x = 20;
-        }
+        }            
 
         // Limita o impulso em 10 unidades
         if (cpvlength(delta) > 10) {
@@ -262,28 +260,40 @@ void moveRoboGoleiro(cpBody* body, void* data)
 void moveBola(cpBody* body, void* data)
 {
     //cpv(512,350) meio do campo    
-    if(isBallinGoleira1()){
-        resetaBall(body);
-    }   
+    if(isBallinGoleira1())
+        resetaBall(body, 512.0, 350.0);    
+
+    if(isBallOutOfBounds())
+        resetaBall(body, 100.0, 350.0);
 
 }
 
-void resetaBall(cpBody* body){
+void resetaBall(cpBody* body, float x, float y){
     // Posição desejada para o centro do campo
-    cpVect meioCampo = cpv(512, 350);
+    cpVect meioCampo = cpv(x, y);
 
     cpVect RexPos = cpv(800,350);
     cpVect ShulkPos = cpv(200,450);
 
     // Define a posição da bola diretamente para o meio do campo
     cpBodySetPosition(body, meioCampo);
-    cpBodySetPosition(Rex, RexPos);
-    cpBodySetPosition(Shulk, ShulkPos);
+    //Condição adicionada para evitar problemas em debug, caso cpBody não exista não da problema em execução
+    if(Rex)
+        cpBodySetPosition(Rex, RexPos);
+    //Condição adicionada para evitar problemas em debug, caso cpBody não exista não da problema em execução
+    if(Shulk)
+        cpBodySetPosition(Shulk, ShulkPos);
 }
 
-bool isBallinGoleira1() {
+bool isBallOutOfBounds() {
     // Coordenadas das goleiras e traves
+    
+    //caso bola passe de 44 acima de 380 retorna a bola na frente do goleiro
+    //caso bola passe de 44 abaixo de 325 retorna a bola na frente do goleiro
     cpVect goleiraEsquerda = cpv(44, 350);
+
+    //caso bola passe de 980 acima de 380 retorna a bola na frente do goleiro
+    //caso bola passe de 980 abaixo de 325 retorna a bola na frente do goleiro
     cpVect goleiraDireita = cpv(980, 350);
     
     float traveCimaY = 380.0;
@@ -296,6 +306,37 @@ bool isBallinGoleira1() {
     printf("goleiraDireita.x : %f \n", goleiraDireita.x);
     printf("traveCima.y : %f \n", traveCimaY);
     printf("traveBaixo.y : %f \n", traveBaixoY);
+
+    // Verifica se a bola está abaixo ou acima da goleira esquerda
+    if (ballPos.x <= goleiraEsquerda.x && ballPos.y >= traveCimaY ||  ballPos.x <= goleiraEsquerda.x &&  ballPos.y <= traveBaixoY) {  
+        printf("esta acima ou abaixo");      
+        return true;
+    }
+
+    // Verifica se a bola está abaixo ou acima da goleira direita
+    if (ballPos.x >= goleiraDireita.x && ballPos.y >= traveCimaY || ballPos.x >= goleiraDireita.x && ballPos.y >= traveBaixoY) {
+        printf("esta acima ou abaixo direita");
+        return true;
+    }
+
+    return false;
+}
+
+bool isBallinGoleira1() {
+    // Coordenadas das goleiras e traves
+    cpVect goleiraEsquerda = cpv(44, 350);
+    cpVect goleiraDireita = cpv(980, 350);
+    
+    float traveCimaY = 380.0;
+    float traveBaixoY = 325.0;
+    cpVect ballPos = cpBodyGetPosition(ballBody);
+
+    // Debugging
+    // printf("ballPos.x : %f \n", ballPos.x);
+    // printf("ballPos.y %f \n", ballPos.y);
+    // printf("goleiraDireita.x : %f \n", goleiraDireita.x);
+    // printf("traveCima.y : %f \n", traveCimaY);
+    // printf("traveBaixo.y : %f \n", traveBaixoY);
 
     // Verifica se a bola está dentro da área da goleira esquerda
     if (ballPos.x <= goleiraEsquerda.x && 
@@ -315,9 +356,6 @@ bool isBallinGoleira1() {
 
     return false;
 }
-
-
-
 
 // Libera memória ocupada por cada corpo, forma e ambiente
 // Acrescente mais linhas caso necessário
