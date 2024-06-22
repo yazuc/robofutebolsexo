@@ -20,6 +20,7 @@ bool isBallinGoleira1();
 bool isBallOutOfBounds();
 void resetaBall(cpBody* vect, float x, float y);
 void retornaJogadorOrigem(cpBody* body, cpVect pontoOrigem);
+void impulsionaBola(cpBody* body, cpVect goleira);
 
 // Prototipos
 void initCM();
@@ -129,13 +130,13 @@ void initCM()
     
     //Pyra e Mythra são zagueiras
     Pyra = newCircle(cpv(830,300), 20, 5, "pyra.png", moveRoboZagueiroSupDir, 0.2, 0.5);
-    Mythra = newCircle(cpv(830,430), 20, 5, "mythra.png", moveRoboZagueiroInfDir, 0.2, 0.5);
+    Mythra = newCircle(cpv(830,430), 20, 5, "mythra.png", NULL, 0.2, 0.5);
 
     //rex será um atacantee
     Rex = newCircle(cpv(550,440), 20, 5, "RoundRex_icon.png", moveRoboRed, 0.2, 0.5);
 
     //Matthew será o outro atacante
-    Matthew = newCircle(cpv(480,440), 20, 5, "roundMatthe_icon.png", moveRobo, 0.2, 0.5);
+    Matthew = newCircle(cpv(470,440), 20, 5, "roundMatthe_icon.png", moveRobo, 0.2, 0.5);
 
     //A será a goleira
     A = newCircle(cpv(100,350), 10, 5, "RoundA_icon.png", moveRoboGoleiro, 0.2, 0.5);
@@ -152,8 +153,8 @@ void moveRobo(cpBody* body, void* data)
 
     // Limite da velocidade do robô
     const float limiteVelocidade = (10 + rand() % 21);
-    const float fatorDrible = (rand() % 7 - 3);
-
+    const float fatorDrible = (rand() % 9 - 3);
+    
     // Limite do impulso
     const float limiteImpulso = 3.0;
 
@@ -165,12 +166,13 @@ void moveRobo(cpBody* body, void* data)
     // Obtém a posição do robô e da bola
     cpVect robotPos = cpBodyGetPosition(body);
     cpVect ballPos = cpBodyGetPosition(ballBody);
+    cpVect goleiraDireita = cpv(980, 350);
 
     // Calcula a distância entre o robô e a bola
-    cpFloat distancia = cpvdist(robotPos, ballPos);
+    cpFloat distanciaChute = cpvdist(robotPos, cpv(700, 350));
+    cpFloat distanciaDaBola = cpvdist(robotPos, ballPos);
 
     // Coordenadas da goleira direita
-    cpVect goleiraDireita = cpv(980, 350);
     float traveCimaY = 380.0;
     float traveBaixoY = 325.0;
 
@@ -178,7 +180,7 @@ void moveRobo(cpBody* body, void* data)
     cpVect delta = cpvzero;
 
     //faz a checagm em ballPos.x - 20 pra ele poder passar por trás da bola antes de voltar a tragetória
-    if (ballPos.x - 10 < robotPos.x )
+    if (ballPos.x < robotPos.x )
     {
         // Se a bola está atrás do robô, calcular vetor para contornar a bola
         // Calcula um vetor do robô à bola (DELTA = B - R)
@@ -187,23 +189,27 @@ void moveRobo(cpBody* body, void* data)
     else
     {
         // Calcula um vetor do robô à bola (DELTA = B - R)
-            delta = cpvsub(ballPos, robotPos);
+        delta = cpvsub(ballPos, robotPos);
 
-            // Limita o impulso
-            delta = cpvmult(cpvnormalize(delta), limiteImpulso);
+        // Limita o impulso
+        delta = cpvmult(cpvnormalize(delta), limiteImpulso);
 
-            //printf("distancia da bola: %f", distancia);
+        // printf("distancia do chute: %f \n", distanciaChute);
+        // printf("distancia da bola: %f \n", distanciaDaBola);
 
-            if (distancia <= 28)
-            {
-                //printf("drible utilizado");
-                delta.y = goleiraDireita.y - robotPos.y + fatorDrible * 0.3;
-                // Mantenha o robô na linha do gol (x = goleiraDireita.x)
-                delta.x = goleiraDireita.x - robotPos.x;
+        //todo: quando atacante chegar próximo da coordenada x definida como chuteAGol, deverá ser propulsioinada a bola em direção a goleira
+        
+        //funciona como debug para o goleiro vermelho impulsionaBola(ballBody, goleiraDireita);       
+        
+        if(robotPos.x >= 700){
+            if(distanciaDaBola <= 30){
+                printf("impulsionou em direcao a goleira");
+                impulsionaBola(ballBody, goleiraDireita);                    
             }
-            
-            // Aplica impulso no robô para mover em direção à bola
-            cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);
+        }
+
+        // Aplica impulso no robô para mover em direção à bola
+        cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);
     }
 }
 
@@ -229,7 +235,8 @@ void moveRoboRed(cpBody* body, void* data)
     cpVect ballPos = cpBodyGetPosition(ballBody);
 
     // Calcula a distância entre o robô e a bola
-    cpFloat distancia = cpvdist(robotPos, ballPos);
+    cpFloat distanciaChute = cpvdist(robotPos, cpv(700, 350));
+    cpFloat distanciaDaBola = cpvdist(robotPos, ballPos);
 
     // Coordenadas da goleira direita
     cpVect goleiraDireita = cpv(44, 350);
@@ -257,12 +264,11 @@ void moveRoboRed(cpBody* body, void* data)
 
             //printf("distancia da bola: %f", distancia);
 
-            if (distancia <= 28)
-            {
-                //printf("drible utilizado");
-                delta.y = goleiraDireita.y - robotPos.y + fatorDrible * 0.2;
-                // Mantenha o robô na linha do gol (x = goleiraDireita.x)
-                delta.x = goleiraDireita.x - robotPos.x;
+            if(robotPos.x <= 300){
+                if(distanciaDaBola <= 30){
+                    printf("impulsionou em direcao a goleira");
+                    impulsionaBola(ballBody, goleiraDireita);                    
+                }
             }
             
             // Aplica impulso no robô para mover em direção à bola
@@ -275,14 +281,14 @@ void moveRoboRed(cpBody* body, void* data)
         retornaJogadorOrigem(body, cpv(550,440));
     }
 }
-
+//arrumar movimentação
 void moveRoboZagueiroSup(cpBody* body, void* data) {
     // Detalhes das posições limites
     const float limiteGoleiroX = 90;
-    const float limiteYBaixo = 300;
-    const float limiteYCima = 180;
+    const float limiteYBaixo = 350;
+    const float limiteYCima = 100;
     const float centroCampoY = 350;
-    const float maxVelocidade = 5.0;
+    const float maxVelocidade = 12.0;
     const float maxImpulso = 10.0;
 
     // Posição original do zagueiro
@@ -296,7 +302,7 @@ void moveRoboZagueiroSup(cpBody* body, void* data) {
     // Obtém a posição do robô e da bola
     cpVect robotPos = cpBodyGetPosition(body);
     cpVect ballPos = cpBodyGetPosition(ballBody);
-        
+    cpVect Atacante = cpBodyGetPosition(Rex);
     // Calcula a distância entre o goleiro e a bola
     cpFloat distancia = cpvdist(robotPos, ballPos);
 
@@ -306,8 +312,8 @@ void moveRoboZagueiroSup(cpBody* body, void* data) {
     // Condição para mover apenas quando estiver próximo da bola
     if (distancia < 200.0) {
         // Ajusta a posição em y do robô para seguir a bola dentro dos limites
-        if (robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {
-            delta.y = ballPos.y - robotPos.y;
+        if (robotPos.x < 400 && robotPos.y <= limiteYBaixo && robotPos.y <= limiteYCima) {
+            delta = cpvsub(Atacante, robotPos);
         }
 
         // Mantenha o robô na posição x original do zagueiro
@@ -329,7 +335,7 @@ void moveRoboZagueiroInf(cpBody* body, void* data) {
     // Detalhes das posições limites
     const float limiteGoleiroX = 90;
     const float limiteYBaixo = 540;
-    const float limiteYCima = 430;
+    const float limiteYCima = 350;
     const float centroCampoY = 350;
     const float maxVelocidade = 5.0;
     const float maxImpulso = 10.0;
@@ -345,9 +351,10 @@ void moveRoboZagueiroInf(cpBody* body, void* data) {
     // Obtém a posição do robô e da bola
     cpVect robotPos = cpBodyGetPosition(body);
     cpVect ballPos = cpBodyGetPosition(ballBody);
+    cpVect Atacante = cpBodyGetPosition(Rex);
         
     // Calcula a distância entre o goleiro e a bola
-    cpFloat distancia = cpvdist(robotPos, ballPos);
+    cpFloat distancia = cpvdist(robotPos, Atacante);
 
     // Calcula um vetor do robô à bola (DELTA = B - R)
     cpVect delta = cpvzero;
@@ -355,12 +362,9 @@ void moveRoboZagueiroInf(cpBody* body, void* data) {
     // Condição para mover apenas quando estiver próximo da bola
     if (distancia < 200.0) {
         // Ajusta a posição em y do robô para seguir a bola dentro dos limites
-        if (robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {
-            delta.y = ballPos.y - robotPos.y;
-        }
-
-        // Mantenha o robô na posição x original do zagueiro
-        delta.x = posicaoOriginal.x - robotPos.x;
+        if (robotPos.x < 400 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {            
+            delta = cpvsub(Atacante, robotPos);
+        }        
     } else {
        retornaJogadorOrigem(body, posicaoOriginal);
     }
@@ -377,11 +381,11 @@ void moveRoboZagueiroInf(cpBody* body, void* data) {
 void moveRoboZagueiroSupDir(cpBody* body, void* data) {
     // Detalhes das posições limites
     const float limiteGoleiroX = 90;
-    const float limiteYBaixo = 300;
-    const float limiteYCima = 180;
+    const float limiteYBaixo = 350;
+    const float limiteYCima = 100;
     const float centroCampoY = 350;
-    const float maxVelocidade = 5.0;
-    const float maxImpulso = 10.0;
+    const float maxVelocidade = 12.0;
+    const float maxImpulso = 5.0;
 
     // Posição original do zagueiro
     cpVect posicaoOriginal = cpv(830, 300);
@@ -394,23 +398,20 @@ void moveRoboZagueiroSupDir(cpBody* body, void* data) {
     // Obtém a posição do robô e da bola
     cpVect robotPos = cpBodyGetPosition(body);
     cpVect ballPos = cpBodyGetPosition(ballBody);
-        
+    cpVect Atacante = cpBodyGetPosition(Matthew);
+    
     // Calcula a distância entre o goleiro e a bola
-    cpFloat distancia = cpvdist(robotPos, ballPos);
+    cpFloat distancia = cpvdist(robotPos, Atacante);
 
     // Calcula um vetor do robô à bola (DELTA = B - R)
     cpVect delta = cpvzero;
 
     // Condição para mover apenas quando estiver próximo da bola
     if (distancia < 200.0) {
-        // Ajusta a posição em y do robô para seguir a bola dentro dos limites
-        if (robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {
-            delta.y = ballPos.y - robotPos.y;
-        }
-
-        // Mantenha o robô na posição x original do zagueiro
-        delta.x = posicaoOriginal.x - robotPos.x;
-    } else {
+        // Ajusta a posição em y do robô para seguir a bola dentro dos limites   
+        if (robotPos.x > 700 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima)     
+            delta = cpvsub(Atacante, robotPos);        
+    } else if(distancia >= 300){
        retornaJogadorOrigem(body, posicaoOriginal);
     }
 
@@ -426,11 +427,11 @@ void moveRoboZagueiroSupDir(cpBody* body, void* data) {
 void moveRoboZagueiroInfDir(cpBody* body, void* data) {
     // Detalhes das posições limites
     const float limiteGoleiroX = 90;
-    const float limiteYBaixo = 540;
-    const float limiteYCima = 430;
+    const float limiteYBaixo = 600;
+    const float limiteYCima = 350;
     const float centroCampoY = 350;
     const float maxVelocidade = 5.0;
-    const float maxImpulso = 10.0;
+    const float maxImpulso = 5.0;
 
     // Posição original do zagueiro
     cpVect posicaoOriginal = cpv(830, 450);
@@ -443,31 +444,27 @@ void moveRoboZagueiroInfDir(cpBody* body, void* data) {
     // Obtém a posição do robô e da bola
     cpVect robotPos = cpBodyGetPosition(body);
     cpVect ballPos = cpBodyGetPosition(ballBody);
+    cpVect Atacante = cpBodyGetPosition(Matthew);
         
     // Calcula a distância entre o goleiro e a bola
-    cpFloat distancia = cpvdist(robotPos, ballPos);
+    cpFloat distancia = cpvdist(robotPos, Atacante);
 
     // Calcula um vetor do robô à bola (DELTA = B - R)
     cpVect delta = cpvzero;
 
     // Condição para mover apenas quando estiver próximo da bola
     if (distancia < 200.0) {
-        // Ajusta a posição em y do robô para seguir a bola dentro dos limites
-        if (robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {
-            delta.y = ballPos.y - robotPos.y;
+        // Ajusta a área em que os zagueiros vão interferir no ataque
+        if (robotPos.x > 700 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {
+            delta = cpvsub(Atacante, robotPos);        
         }
-
-        // Mantenha o robô na posição x original do zagueiro
-        delta.x = posicaoOriginal.x - robotPos.x;
     } else {
        retornaJogadorOrigem(body, posicaoOriginal);
     }
-
     // Limita o impulso em 10 unidades
     if (cpvlength(delta) > maxImpulso) {
         delta = cpvmult(cpvnormalize(delta), maxImpulso);
     }
-
     // Finalmente, aplica impulso no robô
     cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);
 }
@@ -503,37 +500,10 @@ void moveRoboGoleiro(cpBody* body, void* data)
 
     //checa se o goleiro está onde deveria
     if (robotPos.x >= 60 && robotPos.x <= posOrigem.x && robotPos.y <= areaCimaY && robotPos.y >= areaBaixoY)
-    {
-        if (distancia < 35.0)
-        {
-            // printf("distância do robo em relacao a bola: %f \n", distancia);
-            // printf("robotPos.y : %f\n", robotPos.y);
-            // printf("entrou\n");
-
-            // Ajusta a posição em y do goleiro para seguir a bola dentro dos limites
-            if (ballPos.y <= 430 && ballPos.y >= 290) {
-                delta.y = ballPos.y - robotPos.y;
-            }
-
-            // Mantenha o robô na linha do gol (x = 90)
-            delta.x = 50;
-
-            // Limita o impulso no goleiro
-            if (cpvlength(delta) > 10) {
-                delta = cpvmult(cpvnormalize(delta), 5);
-            }
-
-            if(distancia < 30.0){
-                // Aplica impulso no goleiro
-                cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);
-            }
-            if(distancia <= 18){
-                if(chanceBloqueio > 25){                    
-                    // Aplica impulso na bola
-                    cpBodyApplyImpulseAtWorldPoint(ballBody, ballImpulse, ballPos);
-                }            
-            }
-        }
+    {                
+        // Ajusta a posição em y do goleiro para seguir a bola dentro dos limites        
+        delta = cpvsub(ballPos,robotPos);             
+        cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);                            
     }
     else
     {
@@ -554,7 +524,7 @@ void moveRoboGoleiroRed(cpBody* body, void* data)
 
     // Limita a velocidade do goleiro
     cpVect vel = cpBodyGetVelocity(body);
-    vel = cpvclamp(vel, 50);
+    vel = cpvclamp(vel, 10);
     cpBodySetVelocity(body, vel);
 
     // Obtém a posição do goleiro e da bola
@@ -567,44 +537,17 @@ void moveRoboGoleiroRed(cpBody* body, void* data)
     // Vetor delta para calcular o movimento do goleiro
     cpVect delta = cpvzero;
 
-    // Impulso que será aplicado na bola
-    cpVect ballImpulse = cpv(7, (rand() % 7) - 3); // Direção e magnitude do impulso na bola
-
-
     //checa se o goleiro está onde deveria
     if (robotPos.x <= 1000 && robotPos.x >= posOrigem.x && robotPos.y <= areaCimaY && robotPos.y >= areaBaixoY)
-    {
-        if (distancia < 30.0)
-        {
-            printf("distancia : %f", distancia);
-            // printf("distância do robo em relacao a bola: %f \n", distancia);
-            // printf("robotPos.y : %f\n", robotPos.y);
-            // printf("entrou\n");
+    {               
+        // Ajusta a posição em y do goleiro para seguir a bola dentro dos limites        
+        delta = cpvsub(ballPos, robotPos);             
 
-            // Ajusta a posição em y do goleiro para seguir a bola dentro dos limites
-            if (ballPos.y <= 430 && ballPos.y >= 290) {
-                delta.y = ballPos.y - robotPos.y;
-            }
+        cpFloat magnitude = 11.0; // Ajuste este valor conforme necessário
+        cpVect impulso = cpvmult(cpvnormalize(delta), magnitude);
 
-            // Mantenha o robô na linha do gol (x = 90)
-            //delta.x = 50;
-
-            // Limita o impulso no goleiro
-            if (cpvlength(delta) > 10) {
-                delta = cpvmult(cpvnormalize(delta), 5);
-            }
-
-            if(distancia < 25.0){
-                // Aplica impulso no goleiro
-                cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);
-            }
-            if(distancia <= 19){
-                if(chanceBloqueio > 25){                    
-                    // Aplica impulso na bola
-                    cpBodyApplyImpulseAtWorldPoint(ballBody, ballImpulse, ballPos);
-                }            
-            }
-        }
+        // Aplica impulso no goleiro
+        cpBodyApplyImpulseAtWorldPoint(body, impulso, robotPos);                            
     }
     else
     {
@@ -618,7 +561,7 @@ void moveBola(cpBody* body, void* data)
     //cpv(512,350) meio do campo    
     if(isBallinGoleira1())
         resetaBall(body, 512.0, 350.0);    
-    isBallOutOfBounds();
+    //isBallOutOfBounds();
 
 }
 
@@ -673,14 +616,14 @@ bool isBallOutOfBounds() {
 
     // Verifica se a bola está abaixo ou acima da goleira esquerda
     if (ballPos.x <= goleiraEsquerda.x && ballPos.y >= traveCimaY ||  ballPos.x <= goleiraEsquerda.x &&  ballPos.y <= traveBaixoY) {  
-        printf("esta acima ou abaixo"); 
+        //printf("esta acima ou abaixo"); 
         resetaBall(ballBody, 100.0, 350.0);     
         return true;
     }
 
     // Verifica se a bola está abaixo ou acima da goleira direita
     if (ballPos.x >= goleiraDireita.x && ballPos.y >= traveCimaY || ballPos.x >= goleiraDireita.x && ballPos.y <= traveBaixoY) {
-        printf("esta acima ou abaixo direita");
+        //printf("esta acima ou abaixo direita");
         resetaBall(ballBody, 900.0, 350.0);
         return true;
     }
@@ -727,17 +670,30 @@ void retornaJogadorOrigem(cpBody* body, cpVect pontoOrigem){
     // Se a bola está muito próxima do próprio gol, retornar ele para receber a bola impulsionada
         cpVect delta = cpvzero;
         cpVect robotPos = cpBodyGetPosition(body);
+        const float fatorAleatorio = (rand() % 15);
 
-        // Retorna o robô à posição original
-        delta.y = pontoOrigem.y - robotPos.y;
-        delta.x = pontoOrigem.x - robotPos.x;
+        delta = cpvsub(pontoOrigem, robotPos);     
+        //delta.y = delta.y + fatorAleatorio * 0.3;   
 
         // Limita o impulso no robô para retornar à posição original
         if (cpvlength(delta) > 10) {
-            delta = cpvmult(cpvnormalize(delta), 5);
+            delta = cpvmult(cpvnormalize(delta), 10);
         }
 
         cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);
+}
+
+void impulsionaBola(cpBody* ballBody, cpVect goleira)
+{
+    // Calcula a direção e a magnitude do impulso na bola
+    cpVect ballPos = cpBodyGetPosition(ballBody);
+    cpVect delta = cpvsub(goleira, ballPos);
+
+    // Normaliza e aplica um impulso à bola
+    cpFloat magnitude = 11.0; // Ajuste este valor conforme necessário
+    cpVect impulso = cpvmult(cpvnormalize(delta), magnitude);
+
+    cpBodyApplyImpulseAtWorldPoint(ballBody, impulso, ballPos);
 }
 
 
@@ -788,17 +744,7 @@ void destroyShulk(cpSpace* space, void* ptr, void* data) {
 void restartCM()
 {
     // Escreva o código para reposicionar os jogadores, ressetar o score, etc
-    // Remove todas as shapes associadas ao corpo
-
-    // if (Shulk) {
-    //     printf("Tentou destruir o Shulk\n");
-
-    //     cpSpaceAddPostStepCallback(space, destroyShulk, Rex, NULL);
-    //     cpSpaceAddPostStepCallback(space, destroyShulk, Shulk, NULL);
-    //     cpSpaceAddPostStepCallback(space, destroyShulk, ballBody, NULL);
-    // }
-
-    
+    resetaBall(ballBody, 512, 350);
     // Não esqueça de ressetar a variável gameOver!
     //gameOver = 0;
 }
