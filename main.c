@@ -7,19 +7,29 @@
 #include "opengl.h"
 
 // Funções para movimentação de objetos
+//Atacantes
 void moveRobo(cpBody* body, void* data);
 void moveRoboRed(cpBody* body, void* data);
+//Goleiros
 void moveRoboGoleiro(cpBody* body, void* data);
 void moveRoboGoleiroRed(cpBody* body, void* data);
+//Zagueiros azul
 void moveRoboZagueiroSup(cpBody* body, void* data);
+void moveRoboZagueiroCen(cpBody* body, void* data);
 void moveRoboZagueiroInf(cpBody* body, void* data);
+//Zagueiros Vermelho
 void moveRoboZagueiroSupDir(cpBody* body, void* data);
+void moveRoboZagueiroCenDir(cpBody* body, void* data);
 void moveRoboZagueiroInfDir(cpBody* body, void* data);
+//bola.
 void moveBola(cpBody* body, void* data);
 bool isBallinGoleira1();
 bool isBallOutOfBounds();
+//reposicionamento da bola
 void resetaBall(cpBody* vect, float x, float y);
+//função de movimento para retornar a posição especificada
 void retornaJogadorOrigem(cpBody* body, cpVect pontoOrigem);
+//chute a gol
 void impulsionaBola(cpBody* body, cpVect goleira);
 
 // Prototipos
@@ -45,6 +55,7 @@ cpSpace* space;
 // Paredes "invisíveis" do ambiente
 cpShape* leftWall, *rightWall, *topWall, *bottomWall;
 
+cpBody* robotBody;
 // A bola
 cpBody* ballBody;
 
@@ -54,32 +65,44 @@ cpBody* Pyra;
 //Zagueiro vermelho
 cpBody* Mythra;
 
-// Zagueiro azul
-cpBody* Nikol;
-
-cpBody* robotBody;
+//Zagueiro vermelho
+cpBody* Nia;
 
 // Atacante vermelho
 cpBody* Rex;
 
-// Atacante azul
-cpBody* Matthew;
-
-// Zagueiro Azul
-cpBody* Shulk;
-
-// Goleiro Azul
-cpBody* A;
+// Atacante vermelho
+cpBody* RexPequeno;
 
 // Goleiro Vermelho
 cpBody* Glimmer;
 
+// Atacante azul
+cpBody* Matthew;
+
+// Atacante azul
+cpBody* Dunban;
+
+// Zagueiro Azul
+cpBody* Shulk;
+
+// Zagueiro azul
+cpBody* Nikol;
+
+// Zagueiro azul
+cpBody* Fiora;
+
+// Goleiro Azul
+cpBody* A;
+
+const int distanciaDoAtacante = 150;
 
 // Cada passo de simulação é 1/60 seg.
 cpFloat timeStep = 1.0/60.0;
 
-//cpVect OrigemMatthew = cpv(480,440);
+//const cpVect OrigemMatthew = cpv(480,440);
 //cpVect OrigemRex = cpv(550,440);
+
 
 // Inicializa o ambiente: é chamada por init() em opengl.c, pois necessita do contexto
 // OpenGL para a leitura das imagens
@@ -122,28 +145,34 @@ void initCM()
 
 
     // ... e um robô de exemplo    
-    //robotBody = newCircle(cpv(550,440), 20, 5, "ship1.png", NULL, 0.2, 0.5);
+    //robotBody = newCircle(cpv(225,350), 5, 5, "ship1.png", NULL, 0.2, 0.5);
 
-    //shulk e nikol são zagueiros
-    Shulk = newCircle(cpv(200,450), 20, 5, "RoundShulk_icon.png", moveRoboZagueiroInf, 0.2, 0.5);
-    Nikol = newCircle(cpv(200,300), 20, 5, "rounded_nikol.png", moveRoboZagueiroSup, 0.2, 0.5);
+    //----------*POSIÇÕES INICIAIS VERMELHO E RESPECTIVAS FUNÇÕES*-----------
     
     //Pyra e Mythra são zagueiras
-    Pyra = newCircle(cpv(830,300), 20, 5, "pyra.png", moveRoboZagueiroSupDir, 0.2, 0.5);
-    Mythra = newCircle(cpv(830,430), 20, 5, "mythra.png", moveRoboZagueiroInfDir, 0.2, 0.5);
+    Pyra = newCircle(cpv(830,180), 20, 5, "pyra.png", moveRoboZagueiroSupDir, 0.2, 0.5);
+    Nia = newCircle(cpv(800, 350), 20, 5, "Nia.png", moveRoboZagueiroCenDir, 0.2, 0.5);
+    Mythra = newCircle(cpv(830,530), 20, 5, "mythra.png", moveRoboZagueiroInfDir, 0.2, 0.5);
 
-    //rex será um atacantee
+    // //rex será um atacantee
+    RexPequeno = newCircle(cpv(550,300), 20, 5, "rex_pequeno.png", moveRoboRed, 0.2, 0.5);
     Rex = newCircle(cpv(550,440), 20, 5, "RoundRex_icon.png", moveRoboRed, 0.2, 0.5);
-
-    //Matthew será o outro atacante
-    Matthew = newCircle(cpv(470,440), 20, 5, "roundMatthe_icon.png", moveRobo, 0.2, 0.5);
-
-    //A será a goleira
-    A = newCircle(cpv(100,350), 10, 5, "RoundA_icon.png", moveRoboGoleiro, 0.2, 0.5);
     
-    //bern the goatleiro
-    Glimmer = newCircle(cpv(930,350), 10, 5, "glimmer.png", moveRoboGoleiroRed, 0.2, 0.5);
+    // //glimmer goleira
+     Glimmer = newCircle(cpv(930,350), 10, 5, "glimmer.png", moveRoboGoleiroRed, 0.2, 0.5);
+    
+    // //----------*POSIÇÕES INICIAIS AZUL E RESPECTIVAS FUNÇÕES*-----------
+    
+    // //Matthew será o outro atacante
+     Dunban = newCircle(cpv(470,300), 20, 5, "dunban.png", moveRobo, 0.2, 0.5);
+     Matthew = newCircle(cpv(470,440), 20, 5, "roundMatthe_icon.png", moveRobo, 0.2, 0.5);
 
+    // //shulk e nikol são zagueiros
+    Nikol = newCircle(cpv(190,180), 20, 5, "rounded_nikol.png", moveRoboZagueiroSup, 0.2, 0.5);
+    Fiora = newCircle(cpv(225,350), 20, 5, "fiora.png", moveRoboZagueiroCen, 0.2, 0.5);
+    Shulk = newCircle(cpv(190,530), 20, 5, "RoundShulk_icon.png", moveRoboZagueiroInf, 0.2, 0.5);
+    // //A será a goleira
+    A = newCircle(cpv(100,350), 10, 5, "RoundA_icon.png", moveRoboGoleiro, 0.2, 0.5);    
 }
 
 void moveRobo(cpBody* body, void* data)
@@ -293,10 +322,9 @@ void moveRoboZagueiroSup(cpBody* body, void* data) {
     const float limiteYCima = 100;
     const float centroCampoY = 350;
     const float maxVelocidade = 12.0;
-    const float maxImpulso = 10.0;
+    const float maxImpulso = 3.0;
 
-    // Posição original do zagueiro
-    cpVect posicaoOriginal = cpv(200, 300);
+    cpVect OrigemNikol = cpv(190,180);
 
     // Obtém e limita a velocidade do robô
     cpVect vel = cpBodyGetVelocity(body);
@@ -307,6 +335,7 @@ void moveRoboZagueiroSup(cpBody* body, void* data) {
     cpVect robotPos = cpBodyGetPosition(body);
     cpVect ballPos = cpBodyGetPosition(ballBody);
     cpVect Atacante = cpBodyGetPosition(Rex);
+
     // Calcula a distância entre o goleiro e o atacanet
     cpFloat distancia = cpvdist(robotPos, Atacante);
 
@@ -314,7 +343,53 @@ void moveRoboZagueiroSup(cpBody* body, void* data) {
     cpVect delta = cpvzero;
 
     // Condição para mover apenas quando estiver próximo da bola
-    if (distancia < 250.0 && robotPos.x <= 400) {
+    if (distancia < distanciaDoAtacante && robotPos.x <= 300) {
+        // Ajusta a posição em y do robô para seguir a bola dentro dos limites
+        if (robotPos.x <= 400 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {
+            delta = cpvsub(Atacante, robotPos);
+        }
+    } else {
+       retornaJogadorOrigem(body, OrigemNikol);
+    }
+
+    // Limita o impulso em 10 unidades
+    if (cpvlength(delta) > maxImpulso) {
+        delta = cpvmult(cpvnormalize(delta), maxImpulso);
+    }
+
+    // Finalmente, aplica impulso no robô
+    cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);
+}
+
+void moveRoboZagueiroCen(cpBody* body, void* data) {
+    // Detalhes das posições limites
+    const float limiteGoleiroX = 90;
+    const float limiteYBaixo = 540;
+    const float limiteYCima = 100;
+    const float centroCampoY = 350;
+    const float maxVelocidade = 12.0;
+    const float maxImpulso = 3.0;
+
+    // Posição original do zagueiro
+    cpVect posicaoOriginal = cpv(225, 350);
+
+    // Obtém e limita a velocidade do robô
+    cpVect vel = cpBodyGetVelocity(body);
+    vel = cpvclamp(vel, maxVelocidade);
+    cpBodySetVelocity(body, vel);
+
+    // Obtém a posição do robô e da bola
+    cpVect robotPos = cpBodyGetPosition(body);
+    cpVect ballPos = cpBodyGetPosition(ballBody);
+    cpVect Atacante = Rex != NULL ? cpBodyGetPosition(Rex) : cpvzero;
+    // Calcula a distância entre o goleiro e o atacanet
+    cpFloat distancia = cpvdist(robotPos, Atacante);
+
+    // Calcula um vetor do robô à bola (DELTA = B - R)
+    cpVect delta = cpvzero;
+
+    // Condição para mover apenas quando estiver próximo da bola
+    if (distancia < distanciaDoAtacante && robotPos.x <= 300) {
         // Ajusta a posição em y do robô para seguir a bola dentro dos limites
         if (robotPos.x <= 400 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {
             delta = cpvsub(Atacante, robotPos);
@@ -339,10 +414,10 @@ void moveRoboZagueiroInf(cpBody* body, void* data) {
     const float limiteYCima = 350;
     const float centroCampoY = 350;
     const float maxVelocidade = 10.0;
-    const float maxImpulso = 10.0;
+    const float maxImpulso = 3.0;
 
     // Posição original do zagueiro
-    cpVect posicaoOriginal = cpv(200, 450);
+    cpVect posicaoOriginal = cpv(190, 530);
 
     // Obtém e limita a velocidade do robô
     cpVect vel = cpBodyGetVelocity(body);
@@ -361,7 +436,7 @@ void moveRoboZagueiroInf(cpBody* body, void* data) {
     cpVect delta = cpvzero;
 
     // Condição para mover apenas quando estiver próximo da bola
-    if (distancia < 200.0) {
+    if (distancia < distanciaDoAtacante) {
         // Ajusta a posição em y do robô para seguir a bola dentro dos limites
         if (robotPos.x < 400 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima) {            
             delta = cpvsub(Atacante, robotPos);
@@ -386,10 +461,10 @@ void moveRoboZagueiroSupDir(cpBody* body, void* data) {
     const float limiteYCima = 100;
     const float centroCampoY = 350;
     const float maxVelocidade = 12.0;
-    const float maxImpulso = 5.0;
+    const float maxImpulso = 4.0;
 
     // Posição original do zagueiro
-    cpVect posicaoOriginal = cpv(830, 300);
+    cpVect posicaoOriginal = cpv(830, 180);
 
     // Obtém e limita a velocidade do robô
     cpVect vel = cpBodyGetVelocity(body);
@@ -401,20 +476,64 @@ void moveRoboZagueiroSupDir(cpBody* body, void* data) {
     cpVect ballPos = cpBodyGetPosition(ballBody);
     cpVect Atacante = cpBodyGetPosition(Matthew);
     
-    // Calcula a distância entre o goleiro e a bola
-    cpFloat distancia = cpvdist(robotPos, Atacante);
-
     // Calcula um vetor do robô à bola (DELTA = B - R)
     cpVect delta = cpvzero;
 
     // Condição para mover apenas quando estiver próximo da bola
-    if (distancia < 300.0) {
-        // Ajusta a posição em y do robô para seguir a bola dentro dos limites   
-        if (robotPos.x > 700 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima)     
-            delta = cpvsub(Atacante, robotPos);        
-    } else if(distancia >= 300){
-       retornaJogadorOrigem(body, posicaoOriginal);
+    if(ballPos.x > 600){
+        if (robotPos.x > 650 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima)     
+            delta = cpvsub(Atacante, robotPos);   
+        else
+            retornaJogadorOrigem(body, posicaoOriginal);
+    }    
+    else
+        retornaJogadorOrigem(body, posicaoOriginal);
+    
+
+    // Limita o impulso em 10 unidades
+    if (cpvlength(delta) > maxImpulso) {
+        delta = cpvmult(cpvnormalize(delta), maxImpulso);
     }
+
+    // Finalmente, aplica impulso no robô
+    cpBodyApplyImpulseAtWorldPoint(body, delta, robotPos);
+}
+
+void moveRoboZagueiroCenDir(cpBody* body, void* data) {
+    // Detalhes das posições limites
+    const float limiteGoleiroX = 90;
+    const float limiteYBaixo = 540;
+    const float limiteYCima = 100;
+    const float centroCampoY = 350;
+    const float maxVelocidade = 12.0;
+    const float maxImpulso = 4.0;
+
+    // Posição original do zagueiro
+    cpVect posicaoOriginal = cpv(800, 350);
+
+    // Obtém e limita a velocidade do robô
+    cpVect vel = cpBodyGetVelocity(body);
+    vel = cpvclamp(vel, maxVelocidade);
+    cpBodySetVelocity(body, vel);
+
+    // Obtém a posição do robô e da bola
+    cpVect robotPos = cpBodyGetPosition(body);
+    cpVect ballPos = cpBodyGetPosition(ballBody);
+    cpVect Atacante = Matthew != NULL ? cpBodyGetPosition(Matthew) : cpvzero;
+    // Calcula a distância entre o goleiro e o atacanet
+    cpFloat distancia = cpvdist(ballPos, Atacante);
+
+    // Calcula um vetor do robô à bola (DELTA = B - R)
+    cpVect delta = cpvzero;
+
+    if(ballPos.x > 700 && distancia < 50){
+        if (robotPos.x > 650 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima)     
+            delta = cpvsub(Atacante, robotPos);   
+        else
+            retornaJogadorOrigem(body, posicaoOriginal);
+    }    
+    else
+        retornaJogadorOrigem(body, posicaoOriginal);
 
     // Limita o impulso em 10 unidades
     if (cpvlength(delta) > maxImpulso) {
@@ -435,7 +554,7 @@ void moveRoboZagueiroInfDir(cpBody* body, void* data) {
     const float maxImpulso = 5.0;
 
     // Posição original do zagueiro
-    cpVect posicaoOriginal = cpv(830, 450);
+    cpVect posicaoOriginal = cpv(830, 530);
 
     // Obtém e limita a velocidade do robô
     cpVect vel = cpBodyGetVelocity(body);
@@ -495,12 +614,8 @@ void moveRoboGoleiro(cpBody* body, void* data)
     // Vetor delta para calcular o movimento do goleiro
     cpVect delta = cpvzero;
 
-    // Impulso que será aplicado na bola
-    cpVect ballImpulse = cpv(7, (rand() % 7)); // Direção e magnitude do impulso na bola
-
-
     //checa se o goleiro está onde deveria
-    if (robotPos.x >= 60 && robotPos.x <= posOrigem.x && robotPos.y <= areaCimaY && robotPos.y >= areaBaixoY)
+    if (robotPos.x >= 60 && robotPos.x <= posOrigem.x + 30 && robotPos.y <= areaCimaY && robotPos.y >= areaBaixoY)
     {                
         // Ajusta a posição em y do goleiro para seguir a bola dentro dos limites        
         delta = cpvsub(ballPos,robotPos);             
@@ -570,29 +685,31 @@ void resetaBall(cpBody* body, float x, float y){
     // Posição desejada para onde a bola vai
     cpVect meioCampo = cpv(x, y);
 
-    cpVect RexPos = cpv(550,440);
-    cpVect ShulkPos = cpv(200,450);
-    cpVect APos = cpv(90, 350);
-
     cpBodySetVelocity(body, cpvzero);
     // Define a posição da bola diretamente para o meio do campo
     cpBodySetPosition(body, meioCampo);
     //Condição adicionada para evitar problemas em debug, caso cpBody não exista não da problema em execução
     if(Rex)
-        cpBodySetPosition(Rex, RexPos);
+        cpBodySetPosition(Rex, cpv(550,440));
     //Condição adicionada para evitar problemas em debug, caso cpBody não exista não da problema em execução
     if(Shulk)
-        cpBodySetPosition(Shulk, ShulkPos);
+        cpBodySetPosition(Shulk, cpv(190,530));
+    if(Nikol)
+        cpBodySetPosition(Nikol, cpv(190,180));
     if(A)
-        cpBodySetPosition(A, APos);
+        cpBodySetPosition(A, cpv(90, 350));
     if(Matthew)
         cpBodySetPosition(Matthew, cpv(480,440));
     if(Glimmer)
         cpBodySetPosition(Glimmer, cpv(930,350));
     if(Pyra)
-        cpBodySetPosition(Pyra, cpv(830,300));
+        cpBodySetPosition(Pyra, cpv(830,180));
     if(Mythra)
-        cpBodySetPosition(Mythra, cpv(830,430));
+        cpBodySetPosition(Mythra, cpv(830,530));
+    if(Fiora)
+        cpBodySetPosition(Fiora, cpv(225,350));    
+    if(Nia)
+        cpBodySetPosition(Nia, cpv(800,350));
 
     if(score1 == 5)
         gameOver = 1;
