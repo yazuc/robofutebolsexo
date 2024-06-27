@@ -10,6 +10,7 @@
 //Atacantes
 void moveRobo(cpBody* body, void* data);
 void moveRoboLower(cpBody* body, void* data);
+
 void moveRoboRed(cpBody* body, void* data);
 void moveRoboLowerRed(cpBody* body, void* data);
 
@@ -187,7 +188,7 @@ void moveRobo(cpBody* body, void* data)
 {
 
     // Limite da velocidade do robô, usei velocidade aleatória pra poder ter mais chances de os dois times poderem fazer gols
-    const float limiteVelocidade = (10 + rand() % 21);
+    const float limiteVelocidade = (10.5 + rand() % 21);
     const float fatorDrible = (rand() % 9 - 3);    
     // Limite do impulso
     const float limiteImpulso = 5.0;
@@ -257,7 +258,7 @@ void moveRoboLower(cpBody* body, void* data)
     const float fatorDrible = (rand() % 51 - 25);
 
     // Limite do impulso
-    const float limiteImpulso = 5.0;
+    const float limiteImpulso = 6.0;
 
     // Obtém e limita a velocidade do robô
     cpVect vel = cpBodyGetVelocity(body);
@@ -317,7 +318,7 @@ void moveRoboLower(cpBody* body, void* data)
 void moveRoboRed(cpBody* body, void* data)
 {
     // Limite da velocidade do robô
-    const float limiteVelocidade = (10 + rand() % 21);
+    const float limiteVelocidade = (10.5 + rand() % 21);
     const float fatorDrible = (rand() % 51 - 25);
 
     // Limite do impulso
@@ -518,7 +519,18 @@ void moveRoboZagueiroCen(cpBody* body, void* data) {
     // Obtém a posição do robô e da bola
     cpVect robotPos = cpBodyGetPosition(body);
     cpVect ballPos = cpBodyGetPosition(ballBody);
-    cpVect Atacante = Rex != NULL ? cpBodyGetPosition(Rex) : cpvzero;
+    cpVect RexPPos = RexPequeno != NULL ? cpBodyGetPosition(RexPequeno) : cpvzero;
+    cpVect RexPos = Rex != NULL ? cpBodyGetPosition(Rex) : cpvzero;
+
+    // Calcula a distância de cada atacante até a bola
+    cpFloat distanciaRexp = cpvdist(ballPos, RexPPos);
+    cpFloat distanciaRex = cpvdist(ballPos, RexPos);
+
+    // Determina qual atacante está mais próximo da bola
+    cpVect Atacante = (distanciaRexp < distanciaRex) ? RexPPos : RexPos;
+
+
+    //cpVect Atacante = Rex != NULL ? cpBodyGetPosition(Rex) : cpvzero;
     // Calcula a distância entre o goleiro e o atacanet
     cpFloat distancia = cpvdist(robotPos, Atacante);
 
@@ -656,18 +668,25 @@ void moveRoboZagueiroCenDir(cpBody* body, void* data) {
     // Obtém a posição do robô e da bola
     cpVect robotPos = cpBodyGetPosition(body);
     cpVect ballPos = cpBodyGetPosition(ballBody);
-    cpVect Atacante = Matthew != NULL ? cpBodyGetPosition(Matthew) : cpvzero;
-    // Calcula a distância entre o goleiro e o atacanet
-    cpFloat distancia = cpvdist(ballPos, Atacante);
+    // Obtém a posição dos atacantes
+    cpVect DunbanPos = Dunban != NULL ? cpBodyGetPosition(Dunban) : cpvzero;
+    cpVect MatthewPos = Matthew != NULL ? cpBodyGetPosition(Matthew) : cpvzero;
+
+    // Calcula a distância de cada atacante até a bola
+    cpFloat distanciaDunban = cpvdist(ballPos, DunbanPos);
+    cpFloat distanciaMatthew = cpvdist(ballPos, MatthewPos);
+
+    // Determina qual atacante está mais próximo da bola
+    cpVect Atacante = (distanciaDunban < distanciaMatthew) ? DunbanPos : MatthewPos;    
+
+    // Calcula a distância entre o goleiro e o atacante
+    cpFloat distancia = cpvdist(robotPos, Atacante);
 
     // Calcula um vetor do robô à bola (DELTA = B - R)
     cpVect delta = cpvzero;
 
-    if(ballPos.x > 700 && distancia < 50){
-        if (robotPos.x > 650 && robotPos.y <= limiteYBaixo && robotPos.y >= limiteYCima)     
+    if(distancia < distanciaDoAtacante && robotPos.x <= 850){
             delta = cpvsub(Atacante, robotPos);   
-        else
-            retornaJogadorOrigem(body, posicaoOriginal);
     }    
     else
         retornaJogadorOrigem(body, posicaoOriginal);
@@ -738,7 +757,7 @@ void moveRoboGoleiro(cpBody* body, void* data)
 
     // Limita a velocidade do goleiro
     cpVect vel = cpBodyGetVelocity(body);
-    vel = cpvclamp(vel, 5);
+    vel = cpvclamp(vel, 10);
     cpBodySetVelocity(body, vel);
 
     // Obtém a posição do goleiro e da bola
@@ -777,7 +796,7 @@ void moveRoboGoleiroRed(cpBody* body, void* data)
 
     // Limita a velocidade do goleiro
     cpVect vel = cpBodyGetVelocity(body);
-    vel = cpvclamp(vel, 15);
+    vel = cpvclamp(vel, 10);
     cpBodySetVelocity(body, vel);
 
     // Obtém a posição do goleiro e da bola
@@ -791,7 +810,7 @@ void moveRoboGoleiroRed(cpBody* body, void* data)
     cpVect delta = cpvzero;
 
     //checa se o goleiro está onde deveria
-    if (robotPos.x <= 1000 && robotPos.x >= posOrigem.x && robotPos.y <= areaCimaY && robotPos.y >= areaBaixoY)
+    if (robotPos.x <= 1000 && robotPos.x >= posOrigem.x - 30 && robotPos.y <= areaCimaY && robotPos.y >= areaBaixoY)
     {               
         // Ajusta a posição em y do goleiro para seguir a bola dentro dos limites        
         delta = cpvsub(ballPos, robotPos);             
